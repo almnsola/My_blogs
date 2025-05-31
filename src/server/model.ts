@@ -1,24 +1,37 @@
-import * as path from 'path'
-import * as low from 'lowdb'
-import * as FileSync from 'lowdb/adapters/FileSync'
-
+import path from 'path'
+import low from 'lowdb'
+import FileSync from 'lowdb/adapters/FileSync'
+import { BrowserWindow } from 'electron'
+import { IApplicationDb, IApplication } from './interfaces/application'
 
 export default class Model {
   appDir: string
-  $site: any
+
+  buildDir: string
+
+  $setting: any
+
   $posts: any
+
   $theme: any
 
-  constructor(appInstance: any) {
+  db: IApplicationDb
+
+  mainWindow: BrowserWindow
+
+  constructor(appInstance: IApplication) {
     this.appDir = appInstance.appDir
-    
+    this.buildDir = appInstance.buildDir
+    this.db = appInstance.db
+    this.mainWindow = appInstance.mainWindow
+
     this.initDataStore()
   }
 
   private initDataStore(): void {
-    const siteAdapter = new FileSync(path.join(this.appDir, 'config/site.json'))
-    const site = low(siteAdapter)
-    this.$site = site
+    const settingAdapter = new FileSync(path.join(this.appDir, 'config/setting.json'))
+    const setting = low(settingAdapter)
+    this.$setting = setting
 
     const postsAdapter = new FileSync(path.join(this.appDir, 'config/posts.json'))
     const posts = low(postsAdapter)
@@ -28,6 +41,4 @@ export default class Model {
     const theme = low(themeAdapter)
     this.$theme = theme
   }
-
 }
-
