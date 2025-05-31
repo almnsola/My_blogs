@@ -18,31 +18,18 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
  * that provide pure *.vue files that need compiling
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/webpack-configurations.html#white-listing-externals
  */
-let whiteListedModules = ['vue']
+let whiteListedModules = ['vue', 'vuetify']
 
 let rendererConfig = {
   devtool: '#cheap-module-eval-source-map',
   entry: {
-    renderer: path.join(__dirname, '../src/renderer/main.js')
+    renderer: path.join(__dirname, '../src/renderer/main.ts')
   },
   externals: [
-    ...Object.keys(dependencies || {}).filter(
-      d => !whiteListedModules.includes(d)
-    )
+    ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
   ],
   module: {
     rules: [
-      {
-        test: /\.(js|vue)$/,
-        enforce: 'pre',
-        exclude: /node_modules/,
-        use: {
-          loader: 'eslint-loader',
-          options: {
-            formatter: require('eslint-friendly-formatter')
-          }
-        }
-      },
       {
         test: /\.css$/,
         use: ExtractTextPlugin.extract({
@@ -55,6 +42,14 @@ let rendererConfig = {
         use: 'vue-html-loader'
       },
       {
+        test: /\.tsx?$/,
+        loader: "ts-loader",
+        exclude: /node_modules/,
+        options: {
+          appendTsSuffixTo: [/\.vue$/]
+        }
+      },
+      {
         test: /\.js$/,
         use: 'babel-loader',
         exclude: /node_modules/
@@ -65,24 +60,16 @@ let rendererConfig = {
       },
       {
         test: /\.vue$/,
-        use: [
-          {
-            loader: 'vue-loader',
-            options: {
-              extractCSS: process.env.NODE_ENV === 'production',
-              loaders: {
-                sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
-                scss: 'vue-style-loader!css-loader!sass-loader'
-              }
-            }
-          },
-          {
-            loader: 'iview-loader',
-            options: {
-              prefix: true
+        use: {
+          loader: 'vue-loader',
+          options: {
+            extractCSS: process.env.NODE_ENV === 'production',
+            loaders: {
+              sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
+              scss: 'vue-style-loader!css-loader!sass-loader'
             }
           }
-        ]
+        }
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -128,10 +115,9 @@ let rendererConfig = {
         removeAttributeQuotes: true,
         removeComments: true
       },
-      nodeModules:
-        process.env.NODE_ENV !== 'production'
-          ? path.resolve(__dirname, '../node_modules')
-          : false
+      nodeModules: process.env.NODE_ENV !== 'production'
+        ? path.resolve(__dirname, '../node_modules')
+        : false
     }),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin()
@@ -144,9 +130,9 @@ let rendererConfig = {
   resolve: {
     alias: {
       '@': path.join(__dirname, '../src/renderer'),
-      vue$: 'vue/dist/vue.esm.js'
+      'vue$': 'vue/dist/vue.esm.js'
     },
-    extensions: ['.js', '.vue', '.json', '.css', '.node']
+    extensions: ['.js', '.ts', '.vue', '.json', '.css', '.node']
   },
   target: 'electron-renderer'
 }
@@ -157,7 +143,7 @@ let rendererConfig = {
 if (process.env.NODE_ENV !== 'production') {
   rendererConfig.plugins.push(
     new webpack.DefinePlugin({
-      __static: `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
+      '__static': `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`
     })
   )
 }

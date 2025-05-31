@@ -64,7 +64,7 @@ function startRenderer () {
       {
         contentBase: path.join(__dirname, '../'),
         quiet: true,
-        setup (app, ctx) {
+        before (app, ctx) {
           app.use(hotMiddleware)
           ctx.middleware.waitUntilValid(() => {
             resolve()
@@ -79,7 +79,7 @@ function startRenderer () {
 
 function startMain () {
   return new Promise((resolve, reject) => {
-    mainConfig.entry.main = [path.join(__dirname, '../src/main/index.dev.js')].concat(mainConfig.entry.main)
+    mainConfig.entry.main = [path.join(__dirname, '../src/main/index.dev.ts')].concat(mainConfig.entry.main)
 
     const compiler = webpack(mainConfig)
 
@@ -97,7 +97,8 @@ function startMain () {
 
       logStats('Main', stats)
 
-      if (electronProcess && electronProcess.kill) {
+      // NOTE: 将 electronProcess.kill 改成了 electronProcess.killed 避免主进程 hot reload 时 报 端口已占用的错误
+      if (electronProcess && electronProcess.killed) {
         manualRestart = true
         process.kill(electronProcess.pid)
         electronProcess = null
@@ -113,7 +114,7 @@ function startMain () {
   })
 }
 
-function startElectron () {
+function startElectron () {  
   electronProcess = spawn(electron, ['--inspect=5858', path.join(__dirname, '../dist/electron/main.js')])
 
   electronProcess.stdout.on('data', data => {
